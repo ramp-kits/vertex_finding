@@ -11,6 +11,13 @@ Open a terminal and
   
 2. Follow the ramp-kits instructions from the [wiki](https://github.com/paris-saclay-cds/ramp-workflow/wiki/Getting-started-with-a-ramp-kit) (i.e. set-up the environment with conda or pip)
 
+
+### Test the kit
+After setting up the environment,
+```
+ramp_test_submission --quick-test
+```
+should run the baseline PV finding and print out the scores.
 #### Local notebook
 
 Get started on this RAMP with the [dedicated notebook](pv_finding.ipynb).
