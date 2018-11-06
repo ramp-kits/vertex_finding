@@ -20,7 +20,7 @@ ramp_test_submission --quick-test
 should run the baseline PV finding and print out the scores.
 #### Local notebook
 
-Get started on this RAMP with the [dedicated notebook](pv_finding.ipynb).
+Get started on this RAMP with the [dedicated notebook](vertex_finding_starting_kit.ipynb).
 
 
 
