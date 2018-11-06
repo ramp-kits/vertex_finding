@@ -9,7 +9,7 @@ Open a terminal and
   $ pip install git+https://github.com/paris-saclay-cds/ramp-workflow.git
   ```
   
-2. Follow the ramp-kits instructions from the [wiki](https://github.com/paris-saclay-cds/ramp-workflow/wiki/Getting-started-with-a-ramp-kit)
+2. Follow the ramp-kits instructions from the [wiki](https://github.com/paris-saclay-cds/ramp-workflow/wiki/Getting-started-with-a-ramp-kit) (i.e. set-up the environment with conda or pip)
 
 #### Local notebook
 
