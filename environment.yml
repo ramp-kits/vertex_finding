@@ -1,31 +1,31 @@
-name: python-flow
+name: vertex_finding
 channels:
   - conda-forge
   - pytorch
 dependencies:
-  - python
-  - scipy
-  - numpy
-  - pandas
-  - jupyter
-  - matplotlib
-  - scikit-learn
+  - python=3.6
+  - scipy=1.1.0
+  - numpy=1.14.5
+  - pandas=0.23.3
+  - jupyter=1.0.0
+  - matplotlib=2.2.2
+  - scikit-learn=0.19.2
+  - scikit-image=0.14.0
+  - h5py=2.8.0
   - keras=2.2.0
   - tensorflow=1.8
-
+  - mahotas=1.4.4
   # PyTorch installation 
   # uncomment the following lines depending on your OS
   # #Linux
   #- pytorch-cpu=0.4.0
   #- torchvision-cpu=0.2.1
   # #Mac
-  - pytorch=0.4.0
-  - torchvision=0.2.1
+  #- pytorch=0.4.0
+  #- torchvision=0.2.1
   # #Windows
   #- pytorch-cpu=0.4.0
   - pip:
-    - autograd
-    - cma
     - https://api.github.com/repos/paris-saclay-cds/ramp-workflow/zipball/master
     - git+https://github.com/paris-saclay-cds/ssd_keras
     # #Windows
