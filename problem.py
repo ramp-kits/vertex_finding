@@ -403,12 +403,9 @@ def _read_data(path, type):
     x_array = np.empty(len(list_x), dtype=object)
     x_array[:] = list_x
     x_array = np.array(x_array)
-    
-    if test:
-        # return src, y
-        return x_array[:5], y_array[:5]
-    else:
-        return x_array, y_array
+
+
+    return x_array, y_array
     #return np.array([[(1,2)],[(1,2)]]),np.array([[(2,3)],[(1,2)]])
 
 
