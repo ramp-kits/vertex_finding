@@ -7,9 +7,9 @@ try:
 except ImportError:
     from urllib import urlretrieve
 
-URLBASE = 'https://storage.ramp.studio/mars_craters/{}'
+URLBASE = 'https://storage.ramp.studio/vertex_finding/{}'
 DATA = [
-    'data_train.npy', 'data_test.npy']
+    '28kEvents.tar.gz', '30kEvents.tar.gz']
 LABELS = [
     'labels_train.csv', 'labels_test.csv']
 
