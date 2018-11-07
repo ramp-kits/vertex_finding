@@ -7,7 +7,11 @@ from ctypes import *
 from array import array
 
 #does this work on different architectures?
-lib = cdll.LoadLibrary('submissions/starting_kit/libRAMP.so')
+import platform 
+if platform.system() == 'Darwin' :
+  lib = cdll.LoadLibrary('submissions/starting_kit/libRAMP.dylib')
+else :
+  lib = cdll.LoadLibrary('submissions/starting_kit/libRAMP.so')
 
 class VeloState(Structure):
     _fields_=[("x",c_float),

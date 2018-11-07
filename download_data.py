@@ -8,6 +8,7 @@ try:
 except ImportError:
     from urllib import urlretrieve
 
+
 #helper function to unpack the data
 def unpack_tar(filename, type):
     tar = tarfile.open(filename)
@@ -26,6 +27,7 @@ def unpack_tar(filename, type):
 URLBASE = 'https://storage.ramp.studio/vertex_finding/{}'
 DATA = [
     '28kEvents.tar.gz', '30kEvents.tar.gz']
+
 
 
 
