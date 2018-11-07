@@ -366,12 +366,11 @@ def _read_data(path, type):
     #default path is .
     #have to set it for reading
     test = os.getenv('RAMP_TEST_MODE', 0)
-    print("test", test)
     path = path + '/data/{0}/'.format(type)
     list_of_files = os.listdir(path)
     #for testing, run over subset of files
     if test:
-      list_of_files = list_of_files[:50]
+      list_of_files = list_of_files[:100]
     for file in list_of_files:
       if not file.endswith('.json'): continue
       file_path = path + file
@@ -404,11 +403,6 @@ def _read_data(path, type):
     x_array = np.empty(len(list_x), dtype=object)
     x_array[:] = list_x
     x_array = np.array(x_array)
-    print("Rec data")
-    #print(x_array)
-    #print(event)
-    #print(event.tracks)
-    #print(event.hits)
     
     if test:
         # return src, y
