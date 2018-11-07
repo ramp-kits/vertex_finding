@@ -19,32 +19,6 @@ from rampwf.score_types import BaseScoreType
 
 #to do: implement various scoring algorithms
 #to do: decide on crossfolds, prediction
-class PVScore(BaseScoreType):
-    is_lower_the_better = False
-    minimum = 0.0
-    maximum = 1.0
-
-    def __init__(self, name='PV rec eff', precision=2):
-        self.name = name
-        self.precision = precision
-
-    def __call__(self, y_true_label_index, y_pred_label_index):
-        #we can us the python PVChecker -> need to transform data for it
-
-        
-        checker = PVChecker()
-        checker.load_from_ramp(y_true_label_index, y_pred_label_index)
-        
-
-        #checker = PVChecker
-        checker.calculate_eff()
-        
-        return checker.reconstructible_efficiency
-
-    def check_y_pred_dimensions(self, y_true, y_pred):
-      if len(y_true) != len(y_pred):
-        raise ValueError('Wrong y_pred dimensions: y_pred should have {} instances, ''instead it has {} instances'.format(len(y_true), len(y_pred)))
-
 
 class PVScore_total(BaseScoreType):
     is_lower_the_better = False
@@ -67,6 +41,7 @@ class PVScore_total(BaseScoreType):
 
         #checker = PVChecker
         checker.calculate_eff()
+        checker.calculate_resolution()
         checker.final_score()
         if self.mode == "total":
           return checker.fin_score
@@ -74,6 +49,8 @@ class PVScore_total(BaseScoreType):
           return checker.reconstructible_efficiency
         if self.mode == "fake":
           return checker.total_fake_rate
+        if self.mode == "resolution":
+           return checker.sigma_z
 
     def check_y_pred_dimensions(self, y_true, y_pred):
       if len(y_true) != len(y_pred):
@@ -195,6 +172,15 @@ class PVChecker:
     self.total_fake_rate = counter_fake_PV/(counter_found_MC_PV + counter_fake_PV)
     self.reconstructible_efficiency = counter_found_MC_PV/counter_total_MC_PV_reconstructible
 
+  def calculate_resolution(self):
+    res_x = np.array(self.df_all_events_true_rec_pvs['residual_x'])
+    res_y = np.array(self.df_all_events_true_rec_pvs['residual_y'])
+    res_z = np.array(self.df_all_events_true_rec_pvs['residual_z'])
+    self.sigma_x = res_x.std()
+    self.sigma_y = res_y.std()
+    self.sigma_z = res_z.std()
+
+
   #print efficiencies and fake rate
   def print_eff(self):
     #use total data frames to count found/total PVs
@@ -218,9 +204,9 @@ class PVChecker:
   #function to get determine total score
   def final_score(self):
     #critertia: efficiency, fake rate, sigma of residuals, means of residuals?
-    fin_score = self.reconstructible_efficiency + self.total_fake_rate
+    fin_score = self.reconstructible_efficiency * (1. - self.total_fake_rate) / self.sigma_x / self.sigma_y / self.sigma_z
     self.fin_score = fin_score / 2.
-    print("the final score is", self.fin_score, "!")
+    #print("the final score is", self.fin_score, "!")
 
 
 
@@ -278,7 +264,7 @@ workflow = rw.workflows.ObjectDetector()
 
 
 score_types = [
-    PVScore(), PVScore_total(name = "efficiency",mode="eff"), PVScore_total(name = "fake rate",mode="fake"), PVScore_total(name = "total",mode="total")
+     PVScore_total(name = "efficiency",mode="eff"), PVScore_total(name = "fake rate",mode="fake"), PVScore_total(name = "total",mode="total") , PVScore_total(name = "z resolution",mode="resolution")
 ]
 
 
@@ -379,8 +365,14 @@ def _read_data(path, type):
     list_x = []
     #default path is .
     #have to set it for reading
+    test = os.getenv('RAMP_TEST_MODE', 0)
+    print("test", test)
     path = path + '/data/{0}/'.format(type)
-    for file in os.listdir(path):
+    list_of_files = os.listdir(path)
+    #for testing, run over subset of files
+    if test:
+      list_of_files = list_of_files[:50]
+    for file in list_of_files:
       if not file.endswith('.json'): continue
       file_path = path + file
       jdata = json.load(open(file_path))
@@ -417,8 +409,12 @@ def _read_data(path, type):
     #print(event)
     #print(event.tracks)
     #print(event.hits)
-
-    return x_array, y_array
+    
+    if test:
+        # return src, y
+        return x_array[:5], y_array[:5]
+    else:
+        return x_array, y_array
     #return np.array([[(1,2)],[(1,2)]]),np.array([[(2,3)],[(1,2)]])
 
 
