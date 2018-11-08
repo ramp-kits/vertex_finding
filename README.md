@@ -19,6 +19,17 @@ One can get the data with
 python download.py
 ```
 It will then get download as compressed files and unpacked to data/train data/test (might take a while)
+
+### Building the baseline solution
+```
+mkdir build
+cd build
+cmake ..
+make
+cd ..
+```
+
+
 ### Testing the kit
 After setting up the environment,
 ```
