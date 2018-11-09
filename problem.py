@@ -79,10 +79,15 @@ class PVChecker:
     self.m_mintracks = 10
     self.m_distance = 0.3
 
-    #data frames to collect all rec and true pvs from all events
-    self.df_all_events_true_rec_pvs = pd.DataFrame()
-    self.df_all_events_fake_rec_pvs = pd.DataFrame()
-    self.df_all_events_mc_pvs = pd.DataFrame()
+
+    self.counter_found_MC_PV = 0
+    self.counter_total_MC_PV = 0
+    self.counter_total_MC_PV_reconstructible = 0
+    self.counter_fake_PV = 0
+
+    self.res_x = np.empty(0)
+    self.res_y = np.empty(0)
+    self.res_z = np.empty(0)
 
 
   #load data
@@ -98,7 +103,7 @@ class PVChecker:
   def load_data_true(self, arr_mc_pvs):
     self.df_mc_pvs = pd.DataFrame(arr_mc_pvs)
     self.df_mc_pvs.columns=['x', 'y', 'z','nVeloTracks']
-    self.df_all_events_mc_pvs    = self.df_all_events_mc_pvs.append(self.df_mc_pvs, ignore_index=True)
+
 
   def load_from_ramp (self, y_true_label_index, y_pred_label_index):
 
@@ -160,31 +165,32 @@ class PVChecker:
       df_true.loc[key,['true_x','true_y','true_z']] = self.df_mc_pvs.loc[row['matched_pv_key'],['x','y','z']].values
     df = pd.concat([df,df_true], axis = 1)
     for dim in ['x', 'y', 'z']:
-      df['residual_'+dim] = df[dim] - df['true_'+dim] 
+      df['residual_'+dim] = df[dim] - df['true_'+dim]
+    self.res_x = np.append(self.res_x, df['x'] - df['true_x'] )
+    self.res_y = np.append(self.res_y, df['y'] - df['true_y'] )
+    self.res_z = np.append(self.res_z, df['z'] - df['true_z'] )
     self.df_true_rec_pvs = df
 
-    self.df_all_events_true_rec_pvs = self.df_all_events_true_rec_pvs.append(self.df_true_rec_pvs, ignore_index=True)
-    self.df_all_events_fake_rec_pvs = self.df_all_events_fake_rec_pvs.append(self.df_fake_rec_pvs, ignore_index=True)
+    self.counter_found_MC_PV = self.counter_found_MC_PV + self.df_true_rec_pvs.index.size
+    self.counter_total_MC_PV = self.counter_total_MC_PV + self.df_mc_pvs.index.size
+    self.counter_total_MC_PV_reconstructible = self.counter_total_MC_PV_reconstructible + self.df_mc_pvs[self.df_mc_pvs.nVeloTracks > self.m_mintracks].index.size
+    self.counter_fake_PV = self.counter_fake_PV + self.df_fake_rec_pvs.index.size
+
+
 
   def calculate_eff(self):
-    #use total data frames to count found/total PVs
-    counter_found_MC_PV = self.df_all_events_true_rec_pvs.index.size
-    counter_total_MC_PV = self.df_all_events_mc_pvs.index.size
-    counter_total_MC_PV_reconstructible = self.df_all_events_mc_pvs[self.df_all_events_mc_pvs.nVeloTracks > self.m_mintracks].index.size
-    #counter_total_MC_PV = self.df_all_events_mc_pvs.index.size
-    counter_fake_PV = self.df_all_events_fake_rec_pvs.index.size
 
-    self.total_efficiency = counter_found_MC_PV/counter_total_MC_PV
-    self.total_fake_rate = counter_fake_PV/(counter_found_MC_PV + counter_fake_PV)
-    self.reconstructible_efficiency = counter_found_MC_PV/counter_total_MC_PV_reconstructible
+
+    self.total_efficiency = self.counter_found_MC_PV/self.counter_total_MC_PV
+    self.total_fake_rate = self.counter_fake_PV/(self.counter_found_MC_PV + self.counter_fake_PV)
+    self.reconstructible_efficiency = self.counter_found_MC_PV/self.counter_total_MC_PV_reconstructible
+
+
 
   def calculate_resolution(self):
-    res_x = np.array(self.df_all_events_true_rec_pvs['residual_x'])
-    res_y = np.array(self.df_all_events_true_rec_pvs['residual_y'])
-    res_z = np.array(self.df_all_events_true_rec_pvs['residual_z'])
-    self.sigma_x = res_x.std()
-    self.sigma_y = res_y.std()
-    self.sigma_z = res_z.std()
+    self.sigma_x = self.res_x.std()
+    self.sigma_y = self.res_y.std()
+    self.sigma_z = self.res_z.std()
 
 
   #print efficiencies and fake rate
