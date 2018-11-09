@@ -115,7 +115,7 @@ bool fitVertex( XYZPoint& seedPoint, VeloState host_velo_states[], Vertex& vtx,
     
 
   if( pvTrack_counter < m_minTr ) {
-    std::cout << "Too few tracks to fit PV" << std::endl;
+    //std::cout << "Too few tracks to fit PV" << std::endl;
     return false;
   }
 
@@ -219,7 +219,7 @@ bool fitVertex( XYZPoint& seedPoint, VeloState host_velo_states[], Vertex& vtx,
     
     // check nr of tracks that entered the fit
     if(ntrin < m_minTr) {
-      std::cout << "Too few tracks after PV fit" << std::endl;
+      //std::cout << "Too few tracks after PV fit" << std::endl;
       return false;
     }
 
