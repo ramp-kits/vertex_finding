@@ -20,48 +20,6 @@ from rampwf.score_types import BaseScoreType
 #to do: implement various scoring algorithms
 #to do: decide on crossfolds, prediction
 
-class PVScore_total(BaseScoreType):
-    is_lower_the_better = False
-    minimum = 0.0
-    maximum = 1.0
-
-    def __init__(self, mode, name='total score', precision=2):
-        self.name = name
-        self.precision = precision
-        self.mode = mode
-
-
-    def __call__(self, y_true_label_index, y_pred_label_index):
-        #we can us the python PVChecker -> need to transform data for it
-
-        
-        checker = PVChecker()
-        checker.load_from_ramp(y_true_label_index, y_pred_label_index)
-        
-
-        #checker = PVChecker
-        checker.calculate_eff()
-        checker.calculate_resolution()
-        checker.final_score()
-        if self.mode == "total":
-          return checker.fin_score
-        if self.mode == "eff":
-          return checker.reconstructible_efficiency
-        if self.mode == "fake":
-          return checker.total_fake_rate
-        if self.mode == "resolution":
-           return checker.sigma_z
-
-    def check_y_pred_dimensions(self, y_true, y_pred):
-      if len(y_true) != len(y_pred):
-        raise ValueError('Wrong y_pred dimensions: y_pred should have {} instances, ''instead it has {} instances'.format(len(y_true), len(y_pred)))
-
-
-
-
-
-
-
 def z_dist_matched(rec_pv_z, mc_pv_z, m_distance):
   return abs(rec_pv_z - mc_pv_z) < m_distance
 
@@ -193,24 +151,6 @@ class PVChecker:
     self.sigma_z = self.res_z.std()
 
 
-  #print efficiencies and fake rate
-  def print_eff(self):
-    #use total data frames to count found/total PVs
-    counter_found_MC_PV = self.df_all_events_true_rec_pvs.index.size
-    counter_total_MC_PV = self.df_all_events_mc_pvs.index.size
-    counter_total_MC_PV_reconstructible = self.df_all_events_mc_pvs[self.df_all_events_mc_pvs.nVeloTracks > self.m_mintracks].index.size
-    #counter_total_MC_PV = self.df_all_events_mc_pvs.index.size
-    counter_fake_PV = self.df_all_events_fake_rec_pvs.index.size
-
-    self.total_efficiency = counter_found_MC_PV/counter_total_MC_PV
-    self.total_fake_rate = counter_fake_PV/(counter_found_MC_PV + counter_fake_PV)
-    self.reconstructible_efficiency = counter_found_MC_PV/counter_total_MC_PV_reconstructible
-    print ("found", counter_found_MC_PV, "of", counter_total_MC_PV, "primary vertices") 
-    print ("efficiency:", self.total_efficiency)
-    print (counter_total_MC_PV_reconstructible,"of", counter_total_MC_PV, "PVs are reconstructible (have more than", self.m_mintracks, "reconstructed Velo tracks)")
-    print ("reconstructible PV efficiency: ", self.reconstructible_efficiency)
-    print ("have", counter_fake_PV, "fake PVs")
-    print ("fake rate:", self.total_fake_rate)
 
 
   #function to get determine total score
@@ -219,6 +159,54 @@ class PVChecker:
     fin_score = self.reconstructible_efficiency * (1. - self.total_fake_rate) / self.sigma_x / self.sigma_y / self.sigma_z
     self.fin_score = fin_score / 2.
     #print("the final score is", self.fin_score, "!")
+
+checker = PVChecker()
+
+class PVScore_total(BaseScoreType):
+    is_lower_the_better = False
+    minimum = 0.0
+    maximum = 1.0
+
+    def __init__(self, mode, name='total score', precision=2):
+        self.name = name
+        self.precision = precision
+        self.mode = mode
+
+
+    def __call__(self, y_true_label_index, y_pred_label_index):
+        #we can us the python PVChecker -> need to transform data for it
+
+        
+        
+        
+        
+
+        #checker = PVChecker
+        
+        if self.mode == "total":
+          return checker.fin_score
+        if self.mode == "eff":
+          checker.load_from_ramp(y_true_label_index, y_pred_label_index)
+          checker.calculate_eff()
+          checker.calculate_resolution()
+          checker.final_score()
+          return checker.reconstructible_efficiency
+        if self.mode == "fake":
+          return checker.total_fake_rate
+        if self.mode == "resolution":
+           return checker.sigma_z
+
+    def check_y_pred_dimensions(self, y_true, y_pred):
+      if len(y_true) != len(y_pred):
+        raise ValueError('Wrong y_pred dimensions: y_pred should have {} instances, ''instead it has {} instances'.format(len(y_true), len(y_pred)))
+
+
+
+
+
+
+
+
 
 
 
