@@ -18,9 +18,10 @@ One can get the data with
 ```
 python download.py
 ```
-It will then get download as compressed files and unpacked to data/train data/test (might take a while)
+It will then get download as compressed files and unpacked to data/train data/test (might take a while). By default, this will extract 5k train and 1k test events.
 
 ### Building the baseline solution
+The baseline solution was adapted from the Primary Vertex reconstruction used in LHCb. It can be compiled in the following way:
 ```
 mkdir build
 cd build
