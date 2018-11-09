@@ -29,7 +29,7 @@ cmake ..
 make
 cd ..
 ```
-
+You will then need to copy the resulting library files (.so, .dylib, ... depending on your architecture) from the build/PatPV and build/baseline directories into the submissions/starting_kit/ directory.
 
 ### Testing the kit
 After setting up the environment,
