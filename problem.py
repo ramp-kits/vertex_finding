@@ -74,7 +74,7 @@ m_distance = 0.5
 #class to do checking and plots
 class PVChecker:
   def __init__(self):
-    
+    print("checking efficiency")
     #configuration for matching
     self.m_mintracks = 10
     self.m_distance = 0.3
@@ -87,15 +87,18 @@ class PVChecker:
 
   #load data
   #here we expect arr_rec_pvs to be numpy array of array[x,y,z] and arr_mc_pvs to be numpy array of array[x,y,z, nTracks]
-  def load_data(self, arr_rec_pvs, arr_mc_pvs):
+  def load_data_rec(self, arr_rec_pvs):
     self.df_rec_pvs = pd.DataFrame(arr_rec_pvs)
     self.df_rec_pvs['matched'] = 0
     #entry number of matched MC PV, -99 if not matched
     self.df_rec_pvs['matched_pv_key'] = -99
     self.df_rec_pvs.columns=['x', 'y', 'z','matched', 'matched_pv_key']
+
+
+  def load_data_true(self, arr_mc_pvs):
     self.df_mc_pvs = pd.DataFrame(arr_mc_pvs)
     self.df_mc_pvs.columns=['x', 'y', 'z','nVeloTracks']
-
+    self.df_all_events_mc_pvs    = self.df_all_events_mc_pvs.append(self.df_mc_pvs, ignore_index=True)
 
   def load_from_ramp (self, y_true_label_index, y_pred_label_index):
 
@@ -114,9 +117,13 @@ class PVChecker:
             RecPV_arr_tot =  RecPV_arr_tot + [RecPV_arr]
           MCPV_arr_tot = np.array(MCPV_arr_tot)
           RecPV_arr_tot = np.array(RecPV_arr_tot)
-          self.load_data(RecPV_arr_tot, MCPV_arr_tot)
-          self.check_event_df()
-  
+          self.load_data_true(MCPV_arr_tot)
+          #catch cases where we reconstructed no PVs
+          if RecPV_arr_tot.size != 0:
+            self.load_data_rec(RecPV_arr_tot)
+            self.check_event_df()
+
+
 
     #check event with previously loaded data frames
   def check_event_df(self):
@@ -158,7 +165,6 @@ class PVChecker:
 
     self.df_all_events_true_rec_pvs = self.df_all_events_true_rec_pvs.append(self.df_true_rec_pvs, ignore_index=True)
     self.df_all_events_fake_rec_pvs = self.df_all_events_fake_rec_pvs.append(self.df_fake_rec_pvs, ignore_index=True)
-    self.df_all_events_mc_pvs       = self.df_all_events_mc_pvs.append(self.df_mc_pvs, ignore_index=True)
 
   def calculate_eff(self):
     #use total data frames to count found/total PVs
