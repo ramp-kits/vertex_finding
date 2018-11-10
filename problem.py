@@ -20,48 +20,6 @@ from rampwf.score_types import BaseScoreType
 #to do: implement various scoring algorithms
 #to do: decide on crossfolds, prediction
 
-class PVScore_total(BaseScoreType):
-    is_lower_the_better = False
-    minimum = 0.0
-    maximum = 1.0
-
-    def __init__(self, mode, name='total score', precision=2):
-        self.name = name
-        self.precision = precision
-        self.mode = mode
-
-
-    def __call__(self, y_true_label_index, y_pred_label_index):
-        #we can us the python PVChecker -> need to transform data for it
-
-        
-        checker = PVChecker()
-        checker.load_from_ramp(y_true_label_index, y_pred_label_index)
-        
-
-        #checker = PVChecker
-        checker.calculate_eff()
-        checker.calculate_resolution()
-        checker.final_score()
-        if self.mode == "total":
-          return checker.fin_score
-        if self.mode == "eff":
-          return checker.reconstructible_efficiency
-        if self.mode == "fake":
-          return checker.total_fake_rate
-        if self.mode == "resolution":
-           return checker.sigma_z
-
-    def check_y_pred_dimensions(self, y_true, y_pred):
-      if len(y_true) != len(y_pred):
-        raise ValueError('Wrong y_pred dimensions: y_pred should have {} instances, ''instead it has {} instances'.format(len(y_true), len(y_pred)))
-
-
-
-
-
-
-
 def z_dist_matched(rec_pv_z, mc_pv_z, m_distance):
   return abs(rec_pv_z - mc_pv_z) < m_distance
 
@@ -74,25 +32,33 @@ m_distance = 0.5
 #class to do checking and plots
 class PVChecker:
   def __init__(self):
-    
+    print("checking efficiency")
     #configuration for matching
     self.m_mintracks = 10
     self.m_distance = 0.3
 
-    #data frames to collect all rec and true pvs from all events
-    self.df_all_events_true_rec_pvs = pd.DataFrame()
-    self.df_all_events_fake_rec_pvs = pd.DataFrame()
-    self.df_all_events_mc_pvs = pd.DataFrame()
+
+    self.counter_found_MC_PV = 0
+    self.counter_total_MC_PV = 0
+    self.counter_total_MC_PV_reconstructible = 0
+    self.counter_fake_PV = 0
+
+    self.res_x = np.empty(0)
+    self.res_y = np.empty(0)
+    self.res_z = np.empty(0)
 
 
   #load data
   #here we expect arr_rec_pvs to be numpy array of array[x,y,z] and arr_mc_pvs to be numpy array of array[x,y,z, nTracks]
-  def load_data(self, arr_rec_pvs, arr_mc_pvs):
+  def load_data_rec(self, arr_rec_pvs):
     self.df_rec_pvs = pd.DataFrame(arr_rec_pvs)
     self.df_rec_pvs['matched'] = 0
     #entry number of matched MC PV, -99 if not matched
     self.df_rec_pvs['matched_pv_key'] = -99
     self.df_rec_pvs.columns=['x', 'y', 'z','matched', 'matched_pv_key']
+
+
+  def load_data_true(self, arr_mc_pvs):
     self.df_mc_pvs = pd.DataFrame(arr_mc_pvs)
     self.df_mc_pvs.columns=['x', 'y', 'z','nVeloTracks']
 
@@ -114,9 +80,13 @@ class PVChecker:
             RecPV_arr_tot =  RecPV_arr_tot + [RecPV_arr]
           MCPV_arr_tot = np.array(MCPV_arr_tot)
           RecPV_arr_tot = np.array(RecPV_arr_tot)
-          self.load_data(RecPV_arr_tot, MCPV_arr_tot)
-          self.check_event_df()
-  
+          self.load_data_true(MCPV_arr_tot)
+          #catch cases where we reconstructed no PVs
+          if RecPV_arr_tot.size != 0:
+            self.load_data_rec(RecPV_arr_tot)
+            self.check_event_df()
+
+
 
     #check event with previously loaded data frames
   def check_event_df(self):
@@ -153,60 +123,90 @@ class PVChecker:
       df_true.loc[key,['true_x','true_y','true_z']] = self.df_mc_pvs.loc[row['matched_pv_key'],['x','y','z']].values
     df = pd.concat([df,df_true], axis = 1)
     for dim in ['x', 'y', 'z']:
-      df['residual_'+dim] = df[dim] - df['true_'+dim] 
+      df['residual_'+dim] = df[dim] - df['true_'+dim]
+    self.res_x = np.append(self.res_x, df['x'] - df['true_x'] )
+    self.res_y = np.append(self.res_y, df['y'] - df['true_y'] )
+    self.res_z = np.append(self.res_z, df['z'] - df['true_z'] )
     self.df_true_rec_pvs = df
 
-    self.df_all_events_true_rec_pvs = self.df_all_events_true_rec_pvs.append(self.df_true_rec_pvs, ignore_index=True)
-    self.df_all_events_fake_rec_pvs = self.df_all_events_fake_rec_pvs.append(self.df_fake_rec_pvs, ignore_index=True)
-    self.df_all_events_mc_pvs       = self.df_all_events_mc_pvs.append(self.df_mc_pvs, ignore_index=True)
+    self.counter_found_MC_PV = self.counter_found_MC_PV + self.df_true_rec_pvs.index.size
+    self.counter_total_MC_PV = self.counter_total_MC_PV + self.df_mc_pvs.index.size
+    self.counter_total_MC_PV_reconstructible = self.counter_total_MC_PV_reconstructible + self.df_mc_pvs[self.df_mc_pvs.nVeloTracks > self.m_mintracks].index.size
+    self.counter_fake_PV = self.counter_fake_PV + self.df_fake_rec_pvs.index.size
+
+
 
   def calculate_eff(self):
-    #use total data frames to count found/total PVs
-    counter_found_MC_PV = self.df_all_events_true_rec_pvs.index.size
-    counter_total_MC_PV = self.df_all_events_mc_pvs.index.size
-    counter_total_MC_PV_reconstructible = self.df_all_events_mc_pvs[self.df_all_events_mc_pvs.nVeloTracks > self.m_mintracks].index.size
-    #counter_total_MC_PV = self.df_all_events_mc_pvs.index.size
-    counter_fake_PV = self.df_all_events_fake_rec_pvs.index.size
 
-    self.total_efficiency = counter_found_MC_PV/counter_total_MC_PV
-    self.total_fake_rate = counter_fake_PV/(counter_found_MC_PV + counter_fake_PV)
-    self.reconstructible_efficiency = counter_found_MC_PV/counter_total_MC_PV_reconstructible
+
+    self.total_efficiency = self.counter_found_MC_PV/self.counter_total_MC_PV
+    self.total_fake_rate = self.counter_fake_PV/(self.counter_found_MC_PV + self.counter_fake_PV)
+    self.reconstructible_efficiency = self.counter_found_MC_PV/self.counter_total_MC_PV_reconstructible
+
+
 
   def calculate_resolution(self):
-    res_x = np.array(self.df_all_events_true_rec_pvs['residual_x'])
-    res_y = np.array(self.df_all_events_true_rec_pvs['residual_y'])
-    res_z = np.array(self.df_all_events_true_rec_pvs['residual_z'])
-    self.sigma_x = res_x.std()
-    self.sigma_y = res_y.std()
-    self.sigma_z = res_z.std()
+    self.sigma_x = self.res_x.std()
+    self.sigma_y = self.res_y.std()
+    self.sigma_z = self.res_z.std()
 
 
-  #print efficiencies and fake rate
-  def print_eff(self):
-    #use total data frames to count found/total PVs
-    counter_found_MC_PV = self.df_all_events_true_rec_pvs.index.size
-    counter_total_MC_PV = self.df_all_events_mc_pvs.index.size
-    counter_total_MC_PV_reconstructible = self.df_all_events_mc_pvs[self.df_all_events_mc_pvs.nVeloTracks > self.m_mintracks].index.size
-    #counter_total_MC_PV = self.df_all_events_mc_pvs.index.size
-    counter_fake_PV = self.df_all_events_fake_rec_pvs.index.size
-
-    self.total_efficiency = counter_found_MC_PV/counter_total_MC_PV
-    self.total_fake_rate = counter_fake_PV/(counter_found_MC_PV + counter_fake_PV)
-    self.reconstructible_efficiency = counter_found_MC_PV/counter_total_MC_PV_reconstructible
-    print ("found", counter_found_MC_PV, "of", counter_total_MC_PV, "primary vertices") 
-    print ("efficiency:", self.total_efficiency)
-    print (counter_total_MC_PV_reconstructible,"of", counter_total_MC_PV, "PVs are reconstructible (have more than", self.m_mintracks, "reconstructed Velo tracks)")
-    print ("reconstructible PV efficiency: ", self.reconstructible_efficiency)
-    print ("have", counter_fake_PV, "fake PVs")
-    print ("fake rate:", self.total_fake_rate)
 
 
   #function to get determine total score
   def final_score(self):
     #critertia: efficiency, fake rate, sigma of residuals, means of residuals?
-    fin_score = self.reconstructible_efficiency * (1. - self.total_fake_rate) / self.sigma_x / self.sigma_y / self.sigma_z
-    self.fin_score = fin_score / 2.
+    self.fin_score = self.reconstructible_efficiency * (1. - self.total_fake_rate) / self.sigma_x / self.sigma_y / self.sigma_z
+    
     #print("the final score is", self.fin_score, "!")
+
+checker = PVChecker()
+
+class PVScore_total(BaseScoreType):
+    is_lower_the_better = False
+    minimum = 0.0
+    maximum = 1.0
+
+    def __init__(self, mode, name='total score', precision=2):
+        self.name = name
+        self.precision = precision
+        self.mode = mode
+
+
+    def __call__(self, y_true_label_index, y_pred_label_index):
+        #we can us the python PVChecker -> need to transform data for it
+
+        
+        
+        
+        
+
+        #checker = PVChecker
+        
+        if self.mode == "total":
+          return checker.fin_score
+        if self.mode == "eff":
+          checker.load_from_ramp(y_true_label_index, y_pred_label_index)
+          checker.calculate_eff()
+          checker.calculate_resolution()
+          checker.final_score()
+          return checker.reconstructible_efficiency
+        if self.mode == "fake":
+          return checker.total_fake_rate
+        if self.mode == "resolution":
+           return checker.sigma_z
+
+    def check_y_pred_dimensions(self, y_true, y_pred):
+      if len(y_true) != len(y_pred):
+        raise ValueError('Wrong y_pred dimensions: y_pred should have {} instances, ''instead it has {} instances'.format(len(y_true), len(y_pred)))
+
+
+
+
+
+
+
+
 
 
 
