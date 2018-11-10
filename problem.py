@@ -156,8 +156,8 @@ class PVChecker:
   #function to get determine total score
   def final_score(self):
     #critertia: efficiency, fake rate, sigma of residuals, means of residuals?
-    fin_score = self.reconstructible_efficiency * (1. - self.total_fake_rate) / self.sigma_x / self.sigma_y / self.sigma_z
-    self.fin_score = fin_score / 2.
+    self.fin_score = self.reconstructible_efficiency * (1. - self.total_fake_rate) / self.sigma_x / self.sigma_y / self.sigma_z
+    
     #print("the final score is", self.fin_score, "!")
 
 checker = PVChecker()
