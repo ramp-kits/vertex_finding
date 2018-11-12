@@ -15,6 +15,7 @@ dependencies:
   - keras=2.2.0
   - tensorflow=1.8
   - mahotas=1.4.4
+  - boost=1.65.1
   # PyTorch installation 
   # uncomment the following lines depending on your OS
   # #Linux
