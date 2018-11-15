@@ -8,17 +8,23 @@ before_install:
     - ./miniconda.sh -b -p /home/travis/miniconda
     - export PATH=/home/travis/miniconda/bin:$PATH
     - conda update --yes --quiet conda
+    - sudo add-apt-repository ppa:mhier/libboost-latest -y
+    - sudo apt-get update -y
 install:
+    - sudo apt-get install libboost -y
     - conda create -n testenv --yes pip python=$PYTHON_VERSION
     - source activate testenv
     - pip install -q flake8 nbconvert[test]
     - pip install git+https://github.com/paris-saclay-cds/ramp-workflow.git
     - pip install -r requirements.txt
-script:
-    - flake8 *.py submissions/*/*.py
-    - ramp_test_submission --quick-test
+before_script:
     - python download_data.py
-    - ramp_test_submission
-
+    - mkdir build && cd build && cmake ..
+    - make
+    - cd ..
+script:
+    - flake8 --ignore=F841 *.py submissions/*/*.py
+    - ramp_test_submission --quick-test
+    - ramp_test_submission --quick-test --submission=baseline
 notifications:
   email: true
