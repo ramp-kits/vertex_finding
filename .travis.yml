@@ -2,30 +2,34 @@ language: python
 env:
   - PYTHON_VERSION=2.7 IPYTHON_KERNEL=python2
   - PYTHON_VERSION=3.6 IPYTHON_KERNEL=python3
+addons:
+  apt:
+    update: true
+    sources:
+      - sourceline: 'ppa:mhier/libboost-latest'
+      - ubuntu-toolchain-r-test
+    packages:
+      - g++-6
+      - boost1.67
 before_install:
-    - wget -q http://repo.continuum.io/miniconda/Miniconda-3.6.0-Linux-x86_64.sh -O miniconda.sh
-    - chmod +x miniconda.sh
-    - ./miniconda.sh -b -p /home/travis/miniconda
-    - export PATH=/home/travis/miniconda/bin:$PATH
-    - conda update --yes --quiet conda
-    - sudo add-apt-repository ppa:mhier/libboost-latest -y
-    - sudo apt-get update -y
+  - wget -q http://repo.continuum.io/miniconda/Miniconda-3.6.0-Linux-x86_64.sh -O miniconda.sh
+  - chmod +x miniconda.sh
+  - ./miniconda.sh -b -p /home/travis/miniconda
+  - export PATH=/home/travis/miniconda/bin:$PATH
+  - conda update --yes --quiet conda
 install:
-    - sudo apt-cache search libboost
-    - sudo apt-get install libboost1.67 -y
-    - conda create -n testenv --yes pip python=$PYTHON_VERSION
-    - source activate testenv
-    - pip install -q flake8 nbconvert[test]
-    - pip install git+https://github.com/paris-saclay-cds/ramp-workflow.git
-    - pip install -r requirements.txt
+  - conda create -n testenv --yes pip python=$PYTHON_VERSION
+  - source activate testenv
+  - pip install -q flake8 nbconvert[test]
+  - pip install git+https://github.com/paris-saclay-cds/ramp-workflow.git
+  - pip install -r requirements.txt
 before_script:
-    - python download_data.py
-    - mkdir build && cd build && cmake ..
-    - make
-    - cd ..
+  # compile the baseline in C++
+  - mkdir build && cd build && cmake .. && make && cd ..
+  - python download_data.py
 script:
-    - flake8 --ignore=F841 *.py submissions/*/*.py
-    - ramp_test_submission --quick-test
-    - ramp_test_submission --quick-test --submission=baseline
+  - flake8 --ignore=F841 *.py submissions/*/*.py
+  - ramp_test_submission --quick-test
+  - ramp_test_submission --quick-test --submission=baseline
 notifications:
   email: true
