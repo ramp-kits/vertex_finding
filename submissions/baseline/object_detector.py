@@ -110,11 +110,11 @@ class ObjectDetector:
             max_vertices = lib.get_max_vertices()
             # Arrays are made available as multiplications
             # of the class by a certain number of elements
-            host_velo_states = max_tracks*VeloState
-            tracks2disable = max_tracks*c_bool
-            seeds = max_seeds*XYZPoint
-            outvtxvec = max_vertices*VertexBase
-            mcvertices_all = max_vertices*MCVertex
+            host_velo_states = max_tracks * VeloState
+            tracks2disable = max_tracks * c_bool
+            seeds = max_seeds * XYZPoint
+            outvtxvec = max_vertices * VertexBase
+            mcvertices_all = max_vertices * MCVertex
 
             number_of_tracks = ctypes.c_uint(0)
             num_mc_vertices = ctypes.c_uint(0)

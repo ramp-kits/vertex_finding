@@ -9,18 +9,18 @@ except ImportError:
     from urllib import urlretrieve
 
 
-#helper function to unpack the data
+# helper function to unpack the data
 def unpack_tar(filename, type, start, end):
     tar = tarfile.open(filename)
     for member in tar.getmembers()[start:end]:
-      #check if member is file
-      if member.isreg():
-        name = member.name
-        if name.endswith('.json'):
-          #remove prefix
-          name = name.split('/')[1]
-          member.name = name
-          tar.extract(member, './data/' + type)
+        # check if member is file
+        if member.isreg():
+            name = member.name
+            if name.endswith('.json'):
+                # remove prefix
+                name = name.split('/')[1]
+                member.name = name
+                tar.extract(member, './data/' + type)
     tar.close()
 
 
@@ -29,18 +29,16 @@ DATA = [
     '28kEvents.tar.gz']
 
 
-
-
 def main(output_dir='data'):
-    filenames = DATA 
+    filenames = DATA
     urls = [URLBASE.format(filename) for filename in filenames]
 
     if not os.path.exists(output_dir):
         os.mkdir(output_dir)
-    if not os.path.exists(output_dir +'/train'):
-        os.mkdir(output_dir +'/train')
-    if not os.path.exists(output_dir +'/test'):
-        os.mkdir(output_dir +'/test')
+    if not os.path.exists(output_dir + '/train'):
+        os.mkdir(output_dir + '/train')
+    if not os.path.exists(output_dir + '/test'):
+        os.mkdir(output_dir + '/test')
 
     # notfound = []
     for url, filename in zip(urls, filenames):

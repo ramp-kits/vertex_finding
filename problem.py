@@ -114,10 +114,11 @@ class PVChecker:
             dist_z = abs(true_z - rec_z)
             # match rec and MC PVs, if the rec pv with minimum z distance
             # to MC PV fullfills matching crtierion
-            if (is_matched(rec_pv_z=rec_z,
-                           mc_pv_z=true_z,
-                           m_distance=self.m_distance)
-                    and not self.df_rec_pvs['matched'][index_min_dist]):
+            crit1 = is_matched(rec_pv_z=rec_z,
+                               mc_pv_z=true_z,
+                               m_distance=self.m_distance)
+            crit2 = self.df_rec_pvs['matched'][index_min_dist]
+            if crit1 and not crit2:
                 self.df_rec_pvs.loc[index_min_dist, 'matched'] = 1
                 self.df_rec_pvs.loc[index_min_dist,
                                     'matched_pv_key'] = mc_index
@@ -135,20 +136,20 @@ class PVChecker:
             )
         df = pd.concat([df, df_true], axis=1)
         for dim in ['x', 'y', 'z']:
-            df['residual_'+dim] = df[dim] - df['true_'+dim]
+            df['residual_' + dim] = df[dim] - df['true_' + dim]
         self.res_x = np.append(self.res_x, df['x'] - df['true_x'])
         self.res_y = np.append(self.res_y, df['y'] - df['true_y'])
         self.res_z = np.append(self.res_z, df['z'] - df['true_z'])
         self.df_true_rec_pvs = df
 
-        self.counter_found_MC_PV = self.counter_found_MC_PV + \
-            self.df_true_rec_pvs.index.size
+        self.counter_found_MC_PV = (
+            self.counter_found_MC_PV + self.df_true_rec_pvs.index.size
+        )
         self.counter_total_MC_PV = (
             self.counter_total_MC_PV + self.df_mc_pvs.index.size
         )
         self.counter_total_MC_PV_reconstructible = (
-            self.counter_total_MC_PV_reconstructible +
-            self.df_mc_pvs[
+            self.counter_total_MC_PV_reconstructible + self.df_mc_pvs[
                 self.df_mc_pvs.nVeloTracks > self.m_mintracks
             ].index.size
         )
@@ -162,12 +163,14 @@ class PVChecker:
             self.counter_found_MC_PV / self.counter_total_MC_PV
         )
         self.total_fake_rate = (
-            self.counter_fake_PV /
-            (self.counter_found_MC_PV + self.counter_fake_PV)
+            self.counter_fake_PV / (
+                self.counter_found_MC_PV + self.counter_fake_PV
+            )
         )
         self.reconstructible_efficiency = (
-            self.counter_found_MC_PV /
-            self.counter_total_MC_PV_reconstructible
+            self.counter_found_MC_PV / (
+                self.counter_total_MC_PV_reconstructible
+            )
         )
 
     def calculate_resolution(self):
@@ -175,11 +178,10 @@ class PVChecker:
         self.sigma_y = self.res_y.std()
         self.sigma_z = self.res_z.std()
 
-
     def effective_efficiency(self):
         self.effective_eff = (
-            self.reconstructible_efficiency *
-            (1. - 2.*self.total_fake_rate) ** 2
+            self.reconstructible_efficiency * (
+                1. - 2. * self.total_fake_rate) ** 2
         )
     # function to get determine total score
 
@@ -191,7 +193,7 @@ class PVChecker:
             self.sigma_x / self.sigma_y / self.sigma_z
 
         # print("the final score is", self.fin_score, "!")
-        
+
 
 checker = PVChecker()
 
@@ -214,16 +216,16 @@ class PVScore_total(BaseScoreType):
         if self.mode == "total":
             return checker.fin_score
         if self.mode == "eff":
-          checker.load_from_ramp(y_true_label_index, y_pred_label_index)
-          checker.calculate_eff()
-          checker.calculate_resolution()
-          checker.final_score()
-          checker.effective_efficiency()
-          return checker.reconstructible_efficiency
+            checker.load_from_ramp(y_true_label_index, y_pred_label_index)
+            checker.calculate_eff()
+            checker.calculate_resolution()
+            checker.final_score()
+            checker.effective_efficiency()
+            return checker.reconstructible_efficiency
         if self.mode == "fake":
-          return checker.total_fake_rate
+            return checker.total_fake_rate
         if self.mode == "effective_eff":
-          return checker.effective_eff
+            return checker.effective_eff
         if self.mode == "resolution":
             return checker.sigma_z
 
@@ -286,7 +288,7 @@ score_types = [
     PVScore_total(name="fake rate", mode="fake"),
     PVScore_total(name="total", mode="total"),
     PVScore_total(name="z resolution", mode="resolution"),
-    PVScore_total(name = "effective efficiency",mode="effective_eff")
+    PVScore_total(name="effective efficiency", mode="effective_eff")
 ]
 
 
@@ -412,7 +414,7 @@ def _read_data(path, type):
         # ) for key,h in MCVertices.items() ]
 
         mc_pvs = [
-            MCVertex(h['Pos'][0], h['Pos'][1], h['Pos'][2],  h['products'])
+            MCVertex(h['Pos'][0], h['Pos'][1], h['Pos'][2], h['products'])
             for key, h in MCVertices.items()
         ]
         list_y = list_y + [mc_pvs]
