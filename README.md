@@ -34,14 +34,23 @@ You will then need to copy the resulting library files (.so, .dylib, ... dependi
 ### Testing the kit
 After setting up the environment,
 ```
-ramp_test_submission --quick-test
+ramp_test_submission --quick-test --submission baseline
 ```
 should run the baseline PV finding and print out the scores, running on a subset of the total data.
 Just doing 
 ```
-ramp_test_submission
+ramp_test_submission --submission baseline
 ```
 will use all locally available data.
+
+
+### Dummy solution
+There is now a dummy solution `submissions/starting_kit/object_detector.py` , returning random PVs.
+
+It can be tested by doing
+```
+ramp_test_submission --quick-test
+```
 
 #### Local notebook
 

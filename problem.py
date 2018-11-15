@@ -191,7 +191,7 @@ class PVChecker:
             self.sigma_x / self.sigma_y / self.sigma_z
 
         # print("the final score is", self.fin_score, "!")
-
+        
 
 checker = PVChecker()
 
