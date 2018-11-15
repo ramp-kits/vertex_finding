@@ -39,7 +39,7 @@ ramp_test_submission --quick-test --submission baseline
 should run the baseline PV finding and print out the scores, running on a subset of the total data.
 Just doing 
 ```
-ramp_test_submission
+ramp_test_submission --submission baseline
 ```
 will use all locally available data.
 
