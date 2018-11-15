@@ -175,6 +175,12 @@ class PVChecker:
         self.sigma_y = self.res_y.std()
         self.sigma_z = self.res_z.std()
 
+
+    def effective_efficiency(self):
+        self.effective_eff = (
+            self.reconstructible_efficiency *
+            (1. - 2.*self.total_fake_rate) ** 2
+        )
     # function to get determine total score
 
     def final_score(self):
@@ -208,13 +214,16 @@ class PVScore_total(BaseScoreType):
         if self.mode == "total":
             return checker.fin_score
         if self.mode == "eff":
-            checker.load_from_ramp(y_true_label_index, y_pred_label_index)
-            checker.calculate_eff()
-            checker.calculate_resolution()
-            checker.final_score()
-            return checker.reconstructible_efficiency
+          checker.load_from_ramp(y_true_label_index, y_pred_label_index)
+          checker.calculate_eff()
+          checker.calculate_resolution()
+          checker.final_score()
+          checker.effective_efficiency()
+          return checker.reconstructible_efficiency
         if self.mode == "fake":
-            return checker.total_fake_rate
+          return checker.total_fake_rate
+        if self.mode == "effective_eff":
+          return checker.effective_eff
         if self.mode == "resolution":
             return checker.sigma_z
 
@@ -276,7 +285,8 @@ score_types = [
     PVScore_total(name="efficiency", mode="eff"),
     PVScore_total(name="fake rate", mode="fake"),
     PVScore_total(name="total", mode="total"),
-    PVScore_total(name="z resolution", mode="resolution")
+    PVScore_total(name="z resolution", mode="resolution"),
+    PVScore_total(name = "effective efficiency",mode="effective_eff")
 ]
 
 
