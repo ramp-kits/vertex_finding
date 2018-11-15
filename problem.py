@@ -38,10 +38,10 @@ class PVChecker:
     self.m_distance = 0.3
 
 
-    self.counter_found_MC_PV = 0
-    self.counter_total_MC_PV = 0
-    self.counter_total_MC_PV_reconstructible = 0
-    self.counter_fake_PV = 0
+    self.counter_found_MC_PV = 0.
+    self.counter_total_MC_PV = 0.
+    self.counter_total_MC_PV_reconstructible = 0.
+    self.counter_fake_PV = 0.
 
     self.res_x = np.empty(0)
     self.res_y = np.empty(0)
@@ -378,13 +378,13 @@ def _read_data(path, type):
       MCVertices  = jdata['MCVertices']
       #mc_pvs = np.array([ np.array(h['Pos'] + [h['products']] ) for key,h in MCVertices.items() ])
       #mc_pvs = [ tuple(h['Pos'] + [h['products']] ) for key,h in MCVertices.items() ]
-      mc_pvs = [ MCVertex(*h['Pos'], + h['products'] ) for key,h in MCVertices.items() ]
+      mc_pvs = [ MCVertex(h['Pos'][0],h['Pos'][1],h['Pos'][2],  h['products'] ) for key,h in MCVertices.items() ]
       list_y = list_y + [mc_pvs]
 
       VeloTracks  = jdata['VeloTracks']
       VeloHits  = jdata['VPClusters']
       #velo_states = [tuple(h['ClosestToBeam']) for key,h in VeloTracks.items() ]
-      velo_states = [VeloState(*h['ClosestToBeam'], *h['errCTBState'])  for key,h in VeloTracks.items() ]
+      velo_states = [VeloState(h['ClosestToBeam'][0],h['ClosestToBeam'][1],h['ClosestToBeam'][2],h['ClosestToBeam'][3],h['ClosestToBeam'][4],h['ClosestToBeam'][5], h['errCTBState'][0], h['errCTBState'][1], h['errCTBState'][2], h['errCTBState'][3], h['errCTBState'][4])  for key,h in VeloTracks.items() ]
       velo_hits = [VeloHit(h['x'], h['y'], h['z']) for key, h in VeloHits.items()]
       event = EventData(velo_states, velo_hits)
       #velo_states = [VeloState(*h['ClosestToBeam'])  for key,h in VeloTracks.items() ]
