@@ -1,3 +1,6 @@
+from __future__ import print_function, division
+
+import os
 import glob
 import numpy as np
 
@@ -9,8 +12,38 @@ from ctypes import c_float
 from ctypes import c_double
 from ctypes import Structure
 
-# does this work on different architectures?
-libfile = glob.glob('build/baseline/lib*')[0]
+
+workdir = os.getcwd()
+build_dir = os.path.join(workdir, 'build')
+lib_pattern = os.path.join(build_dir, 'baseline/lib*')
+
+try:
+    # does this work on different architectures?
+    libfile = glob.glob(lib_pattern)[0]
+except IndexError:
+    # build the shared library
+    print("=> ramp: Shared library not found.", end="\n")
+    print("=> ramp: Rebuilding the shared library..", end="\n")
+
+    import sys
+    import shutil
+    import subprocess
+
+    if os.path.exists(build_dir):
+        shutil.rmtree(build_dir)
+    os.makedirs(build_dir)
+    os.chdir(build_dir)
+    try:
+        cmd = 'cmake {maindir} && make'.format(maindir=workdir)
+        subprocess.check_call(cmd, shell=True)
+    except subprocess.CalledProcessError as e:
+        print("=> ramp: An error occured while building the shared library")
+        sys.exit(e)
+    print("=> ramp: Shared library rebuilt.", end="\n")
+    os.chdir(workdir)
+
+    libfile = glob.glob(lib_pattern)[0]
+
 lib = cdll.LoadLibrary(libfile)
 
 
