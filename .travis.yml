@@ -11,7 +11,7 @@ before_install:
     - sudo add-apt-repository ppa:mhier/libboost-latest -y
     - sudo apt-get update -y
 install:
-    - sudo apt-cache search libboost -y
+    - sudo apt-cache search libboost
     - sudo apt-get install libboost1.67 -y
     - conda create -n testenv --yes pip python=$PYTHON_VERSION
     - source activate testenv
