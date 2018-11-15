@@ -40,7 +40,7 @@ m_distance = 0.5
 
 class PVChecker:
     def __init__(self):
-        print("checking efficiency")
+        # print("PVChecker: checking efficiency")
         # configuration for matching
         self.m_mintracks = 10
         self.m_distance = 0.3
