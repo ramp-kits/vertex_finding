@@ -43,6 +43,15 @@ ramp_test_submission --submission baseline
 ```
 will use all locally available data.
 
+
+### Dummy solution
+There is now a dummy solution `submissions/starting_kit/object_detector.py` , returning random PVs.
+
+It can be tested by doing
+```
+ramp_test_submission --quick-test
+```
+
 #### Local notebook
 
 Get started on this RAMP with the [dedicated notebook](vertex_finding_starting_kit.ipynb).
