@@ -1,66 +1,66 @@
 # RAMP starting kit on Primary Vertex reconstruction
 
-#### Set up
+[![Build Status](https://travis-ci.org/ramp-kits/vertex_finding.svg?branch=master)](https://travis-ci.org/ramp-kits/vertex_finding)
 
-Open a terminal and
+### Set up
 
-1. install the `ramp-workflow` library (if not already done)
+1. clone this repository
   ```
-  $ pip install git+https://github.com/paris-saclay-cds/ramp-workflow.git
+  git clone https://github.com/ramp-kits/vertex_finding.git
+  cd vertex_finding
   ```
-  
-2. Follow the ramp-kits instructions from the [wiki](https://github.com/paris-saclay-cds/ramp-workflow/wiki/Getting-started-with-a-ramp-kit) (i.e. set-up the environment with conda or pip)
 
+2. install the dependancies
+  - with [conda](https://conda.io/miniconda.html)
+  ```
+  conda update conda                   # make sure conda is up-to-date
+  conda env create -f environment.yml  # use environment.yml to create the 'vertex_finding' env
+  source activate vertex_finding       # activates the virtual env
+  ```
+  - without `conda` (best to use a **virtual environment**)
+  ```
+  python -m pip install -r requirements.txt
+  ```
 
-### Downloading the data
+3. download the data
+  ```
+  python download_data.py
+  ```
+  After download, the data will be unpacked to `data/train` and `data/test` (might take a while). By default, this will extract 5k train and 1k test events.
 
-One can get the data with
-```
-python download.py
-```
-It will then get download as compressed files and unpacked to data/train data/test (might take a while). By default, this will extract 5k train and 1k test events.
+### Building the baseline solution (using C++)
 
-### Building the baseline solution
-The baseline solution was adapted from the Primary Vertex reconstruction used in LHCb. It can be compiled in the following way:
-```
-mkdir build
-cd build
-cmake ..
-make
-cd ..
-```
-You will then need to copy the resulting library files (.so, .dylib, ... depending on your architecture) from the build/PatPV and build/baseline directories into the submissions/starting_kit/ directory.
+The baseline solution was adapted from the Primary Vertex reconstruction used in LHCb.   
+It requires `CMake`, the `Boost` library (both installed with `conda`) and a decent C++ compiler to be built.
+
+- manual build
+    ```bash
+    mkdir build && cd build
+    cmake .. && make
+    cd ..
+    ```
+- automated build, when calling the baseline submission for the first time
+    ```bash
+    ramp_test_submission --quick-test --submission baseline
+    ``` 
 
 ### Testing the kit
-After setting up the environment,
-```
+
+After setting up the environment, run the starting kit (random values) and the baseline solutions.
+```bash
+ramp_test_submission --quick-test
 ramp_test_submission --quick-test --submission baseline
 ```
-should run the baseline PV finding and print out the scores, running on a subset of the total data.
-Just doing 
+They should run on a subset of the data and print out the scores.
+
+To process all of the locally available data, remove the `--quick-test` flag.
 ```
 ramp_test_submission --submission baseline
 ```
-will use all locally available data.
 
-
-### Dummy solution
-There is now a dummy solution `submissions/starting_kit/object_detector.py` , returning random PVs.
-
-It can be tested by doing
-```
-ramp_test_submission --quick-test
-```
-
-#### Local notebook
+### Local notebook
 
 Get started on this RAMP with the [dedicated notebook](vertex_finding_starting_kit.ipynb).
 
-
-
-#### Help
+### Help
 Go to the `ramp-workflow` [wiki](https://github.com/paris-saclay-cds/ramp-workflow/wiki) for more help on the [RAMP](http:www.ramp.studio) ecosystem.
-
-
-
-
