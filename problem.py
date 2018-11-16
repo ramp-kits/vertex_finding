@@ -20,38 +20,21 @@ from rampwf.score_types import BaseScoreType
 #to do: implement various scoring algorithms
 #to do: decide on crossfolds, prediction
 
-
-
-
 def z_dist_matched(rec_pv_z, mc_pv_z, m_distance):
   return abs(rec_pv_z - mc_pv_z) < m_distance
 
 #define matching criteria, based on distance:
 def is_matched(rec_pv_x=0., rec_pv_y=0., rec_pv_z=0., mc_pv_x=0., mc_pv_y=0., mc_pv_z=0., m_distance=0.1):
   return z_dist_matched(rec_pv_z, mc_pv_z, m_distance)
-
-#get the number of Velo tracks of the PV with key pv_key
-def get_number_velo_tracks(pv_key, jdata):
-  MCParticles = jdata['MCParticles']
-  VeloTracks  = jdata['VeloTracks']
-  counter_velo_tracks = 0
-  for mcp_key in MCParticles:
-    if int(pv_key) == int(MCParticles[mcp_key]['PV']) and bool(MCParticles[mcp_key]['ispv']):
-      if bool(MCParticles[mcp_key]['isvelo']):
-        for track_key in VeloTracks:
-          if mcp_key in VeloTracks[track_key]['MCPs']:
-            counter_velo_tracks = counter_velo_tracks + 1
-            break
-  return counter_velo_tracks
-
-
+#define configuration
+m_distance = 0.5
 
 #class to do checking and plots
 class PVChecker:
   def __init__(self):
     print("checking efficiency")
     #configuration for matching
-    self.m_mintracks = 2
+    self.m_mintracks = 10
     self.m_distance = 0.3
 
 
@@ -109,7 +92,7 @@ class PVChecker:
   def check_event_df(self):
     #loop over MC PVs and find rec PV with minimum z distance
     for mc_index, mc_pv in self.df_mc_pvs.iterrows():
-      if mc_pv['nVeloTracks'] < self.m_mintracks: continue
+      #if mc_pv['nVeloTracks'] < self.m_mintracks: continue
       
       #loop over rec PVs
       true_z = mc_pv['z']
@@ -148,7 +131,7 @@ class PVChecker:
 
     self.counter_found_MC_PV = self.counter_found_MC_PV + self.df_true_rec_pvs.index.size
     self.counter_total_MC_PV = self.counter_total_MC_PV + self.df_mc_pvs.index.size
-    self.counter_total_MC_PV_reconstructible = self.counter_total_MC_PV_reconstructible + self.df_mc_pvs[self.df_mc_pvs.nVeloTracks >= self.m_mintracks].index.size
+    self.counter_total_MC_PV_reconstructible = self.counter_total_MC_PV_reconstructible + self.df_mc_pvs[self.df_mc_pvs.nVeloTracks > self.m_mintracks].index.size
     self.counter_fake_PV = self.counter_fake_PV + self.df_fake_rec_pvs.index.size
 
 
@@ -176,8 +159,9 @@ class PVChecker:
   #function to get determine total score
   def final_score(self):
     #critertia: efficiency, fake rate, sigma of residuals, means of residuals?
-    self.fin_score = self.reconstructible_efficiency * (1. - 2.*self.total_fake_rate)**2 / self.sigma_x / self.sigma_y / self.sigma_z
+    self.fin_score = self.reconstructible_efficiency * (1. - self.total_fake_rate) / self.sigma_x / self.sigma_y / self.sigma_z
     
+    #print("the final score is", self.fin_score, "!")
 
 checker = PVChecker()
 
@@ -203,13 +187,13 @@ class PVScore_total(BaseScoreType):
         #checker = PVChecker
         
         if self.mode == "total":
+          return checker.fin_score
+        if self.mode == "eff":
           checker.load_from_ramp(y_true_label_index, y_pred_label_index)
           checker.calculate_eff()
           checker.calculate_resolution()
           checker.final_score()
           checker.effective_efficiency()
-          return checker.fin_score
-        if self.mode == "eff":
           return checker.reconstructible_efficiency
         if self.mode == "fake":
           return checker.total_fake_rate
@@ -285,8 +269,8 @@ workflow = rw.workflows.ObjectDetector()
 
 
 
-score_types = [PVScore_total(name = "total",mode="total"),
-     PVScore_total(name = "efficiency",mode="eff"), PVScore_total(name = "fake rate",mode="fake"), PVScore_total(name = "z resolution",mode="resolution"), PVScore_total(name = "effective efficiency",mode="effective_eff")
+score_types = [
+     PVScore_total(name = "efficiency",mode="eff"), PVScore_total(name = "fake rate",mode="fake"), PVScore_total(name = "total",mode="total") , PVScore_total(name = "z resolution",mode="resolution"), PVScore_total(name = "effective efficiency",mode="effective_eff")
 ]
 
 
@@ -398,8 +382,9 @@ def _read_data(path, type):
       file_path = path + file
       jdata = json.load(open(file_path))
       MCVertices  = jdata['MCVertices']
-
-      mc_pvs = [ MCVertex(h['Pos'][0],h['Pos'][1],h['Pos'][2],  get_number_velo_tracks(key, jdata) ) for key,h in MCVertices.items() ]
+      #mc_pvs = np.array([ np.array(h['Pos'] + [h['products']] ) for key,h in MCVertices.items() ])
+      #mc_pvs = [ tuple(h['Pos'] + [h['products']] ) for key,h in MCVertices.items() ]
+      mc_pvs = [ MCVertex(h['Pos'][0],h['Pos'][1],h['Pos'][2],  h['products'] ) for key,h in MCVertices.items() ]
       list_y = list_y + [mc_pvs]
 
       VeloTracks  = jdata['VeloTracks']
