@@ -32,8 +32,19 @@ def is_matched(rec_pv_x=0., rec_pv_y=0., rec_pv_z=0., mc_pv_x=0.,
     return z_dist_matched(rec_pv_z, mc_pv_z, m_distance)
 
 
-# define configuration
-m_distance = 0.5
+#get the number of Velo tracks of the PV with key pv_key
+def get_number_velo_tracks(pv_key, jdata):
+  MCParticles = jdata['MCParticles']
+  VeloTracks  = jdata['VeloTracks']
+  counter_velo_tracks = 0
+  for mcp_key in MCParticles:
+    if int(pv_key) == int(MCParticles[mcp_key]['PV']) and bool(MCParticles[mcp_key]['ispv']):
+      if bool(MCParticles[mcp_key]['isvelo']):
+        for track_key in VeloTracks:
+          if mcp_key in VeloTracks[track_key]['MCPs']:
+            counter_velo_tracks = counter_velo_tracks + 1
+            break
+  return counter_velo_tracks
 
 # class to do checking and plots
 
@@ -42,7 +53,7 @@ class PVChecker:
     def __init__(self):
         # print("PVChecker: checking efficiency")
         # configuration for matching
-        self.m_mintracks = 10
+        self.m_mintracks = 2
         self.m_distance = 0.3
 
         self.counter_found_MC_PV = 0.
@@ -98,7 +109,7 @@ class PVChecker:
     def check_event_df(self):
         # loop over MC PVs and find rec PV with minimum z distance
         for mc_index, mc_pv in self.df_mc_pvs.iterrows():
-            # if mc_pv['nVeloTracks'] < self.m_mintracks: continue
+            if mc_pv['nVeloTracks'] < self.m_mintracks: continue
 
             # loop over rec PVs
             true_z = mc_pv['z']
@@ -150,7 +161,7 @@ class PVChecker:
         )
         self.counter_total_MC_PV_reconstructible = (
             self.counter_total_MC_PV_reconstructible + self.df_mc_pvs[
-                self.df_mc_pvs.nVeloTracks > self.m_mintracks
+                self.df_mc_pvs.nVeloTracks >= self.m_mintracks
             ].index.size
         )
         self.counter_fake_PV = (
@@ -189,7 +200,7 @@ class PVChecker:
         # critertia: efficiency, fake rate, sigma of residuals,
         # means of residuals?
         self.fin_score = self.reconstructible_efficiency * \
-            (1. - self.total_fake_rate) / \
+            (1. - 2. * self.total_fake_rate) ** 2 / \
             self.sigma_x / self.sigma_y / self.sigma_z
 
         # print("the final score is", self.fin_score, "!")
@@ -214,13 +225,13 @@ class PVScore_total(BaseScoreType):
         # checker = PVChecker
 
         if self.mode == "total":
-            return checker.fin_score
-        if self.mode == "eff":
             checker.load_from_ramp(y_true_label_index, y_pred_label_index)
             checker.calculate_eff()
             checker.calculate_resolution()
             checker.final_score()
             checker.effective_efficiency()
+            return checker.fin_score
+        if self.mode == "eff":
             return checker.reconstructible_efficiency
         if self.mode == "fake":
             return checker.total_fake_rate
@@ -284,9 +295,9 @@ workflow = rw.workflows.ObjectDetector()
 
 
 score_types = [
+    PVScore_total(name="total", mode="total"),
     PVScore_total(name="efficiency", mode="eff"),
     PVScore_total(name="fake rate", mode="fake"),
-    PVScore_total(name="total", mode="total"),
     PVScore_total(name="z resolution", mode="resolution"),
     PVScore_total(name="effective efficiency", mode="effective_eff")
 ]
@@ -409,12 +420,9 @@ def _read_data(path, type):
         jdata = json.load(open(file_path))
         MCVertices = jdata['MCVertices']
 
-        # mc_pvs = np.array([ np.array(h['Pos'] + [h['products']] ) for key,h
-        # in MCVertices.items() ]) mc_pvs = [ tuple(h['Pos'] + [h['products']]
-        # ) for key,h in MCVertices.items() ]
 
         mc_pvs = [
-            MCVertex(h['Pos'][0], h['Pos'][1], h['Pos'][2], h['products'])
+            MCVertex(h['Pos'][0], h['Pos'][1], h['Pos'][2], get_number_velo_tracks(key, jdata))
             for key, h in MCVertices.items()
         ]
         list_y = list_y + [mc_pvs]
@@ -440,15 +448,6 @@ def _read_data(path, type):
                      for key, h in VeloHits.items()]
         event = EventData(velo_states, velo_hits)
 
-        # velo_states = [VeloState(*h['ClosestToBeam'])  for key,h in
-        #                VeloTracks.items() ]
-        # velo_states_cov = [VeloState_Cov(*h['errCTBState'])
-        #                    for key,h in VeloTracks.items() ]
-
-        # check if this indeed puts correct velo state and cov matrix together
-        # zipped_x = [i for i in zip(velo_states, velo_states_cov)]
-
-        # list_x = list_x + [zipped_x]
         list_x = list_x + [event]
 
     y_array = np.empty(len(list_y), dtype=object)
@@ -459,7 +458,6 @@ def _read_data(path, type):
     x_array = np.array(x_array)
 
     return x_array, y_array
-    # return np.array([[(1,2)],[(1,2)]]),np.array([[(2,3)],[(1,2)]])
 
 
 def get_test_data(path):
