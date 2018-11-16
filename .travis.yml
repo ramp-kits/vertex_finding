@@ -1,24 +1,36 @@
 language: python
 env:
-  - PYTHON_VERSION=2.7 IPYTHON_KERNEL=python2
-  - PYTHON_VERSION=3.6 IPYTHON_KERNEL=python3
+  - PYTHON_VERSION=2.7 IPYTHON_KERNEL=python2 COMPILER=g++-6
+  - PYTHON_VERSION=3.6 IPYTHON_KERNEL=python3 COMPILER=g++-6
+compiler: gcc
+addons:
+  apt:
+    update: true
+    sources:
+      - sourceline: 'ppa:mhier/libboost-latest'
+      - ubuntu-toolchain-r-test
+    packages:
+      - g++-6
+      - boost1.67
 before_install:
-    - wget -q http://repo.continuum.io/miniconda/Miniconda-3.6.0-Linux-x86_64.sh -O miniconda.sh
-    - chmod +x miniconda.sh
-    - ./miniconda.sh -b -p /home/travis/miniconda
-    - export PATH=/home/travis/miniconda/bin:$PATH
-    - conda update --yes --quiet conda
+  - wget -q http://repo.continuum.io/miniconda/Miniconda-3.6.0-Linux-x86_64.sh -O miniconda.sh
+  - chmod +x miniconda.sh
+  - ./miniconda.sh -b -p /home/travis/miniconda
+  - export PATH=/home/travis/miniconda/bin:$PATH
+  - conda update --yes --quiet conda
 install:
-    - conda create -n testenv --yes pip python=$PYTHON_VERSION
-    - source activate testenv
-    - pip install -q flake8 nbconvert[test]
-    - pip install git+https://github.com/paris-saclay-cds/ramp-workflow.git
-    - pip install -r requirements.txt
+  - conda create -n testenv --yes pip python=$PYTHON_VERSION
+  - source activate testenv
+  - pip install -q flake8 nbconvert[test]
+  - pip install git+https://github.com/paris-saclay-cds/ramp-workflow.git
+  - pip install -r requirements.txt
+before_script:
+  # compile the baseline in C++
+  - mkdir build && cd build && CXX=/usr/bin/${COMPILER} cmake .. && make && cd ..
+  - python download_data.py
 script:
-    - flake8 *.py submissions/*/*.py
-    - ramp_test_submission --quick-test
-    - python download_data.py
-    - ramp_test_submission
-
+  - flake8 --ignore=F841 *.py submissions/*/*.py
+  - ramp_test_submission --quick-test
+  - ramp_test_submission --quick-test --submission=baseline
 notifications:
   email: true

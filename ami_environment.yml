@@ -1,8 +1,11 @@
 name: root
 channels:
+  - anaconda
   - pytorch
   - conda-forge
 dependencies:
+  - boost
+  - cmake
   - scipy
   - numpy
   - pandas>=0.23
