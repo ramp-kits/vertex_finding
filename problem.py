@@ -209,6 +209,37 @@ class PVChecker:
 checker = PVChecker()
 
 
+class PVScore_final(BaseScoreType):
+    is_lower_the_better = False
+    minimum = 0.0
+    maximum = 1.0
+
+    def __init__(self, name, precision=2):
+        self.name = name
+        self.precision = precision
+
+    def __call__(self, y_true_label_index, y_pred_label_index):
+        # we can us the python PVChecker -> need to transform data for it
+
+        # checker = PVChecker
+
+
+            checker.load_from_ramp(y_true_label_index, y_pred_label_index)
+            checker.calculate_eff()
+            checker.calculate_resolution()
+            checker.final_score()
+            checker.effective_efficiency()
+            return checker.fin_score
+
+
+    def check_y_pred_dimensions(self, y_true, y_pred):
+        if len(y_true) != len(y_pred):
+            msg = ('Wrong y_pred dimensions: y_pred should have {} '
+                   'instances, instead it has {} instances')
+            raise ValueError(msg.format(len(y_true), len(y_pred)))
+
+
+
 class PVScore_total(BaseScoreType):
     is_lower_the_better = False
     minimum = 0.0
@@ -295,7 +326,7 @@ workflow = rw.workflows.ObjectDetector()
 
 
 score_types = [
-    PVScore_total(name="total", mode="total"),
+    PVScore_final(name="final"),
     PVScore_total(name="efficiency", mode="eff"),
     PVScore_total(name="fake rate", mode="fake"),
     PVScore_total(name="z resolution", mode="resolution"),
