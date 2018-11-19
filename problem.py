@@ -43,10 +43,8 @@ def get_number_velo_tracks(pv_key, jdata):
         is_velo = bool(mcp['isvelo'])
         if pv_key == int(mcp['PV']) and is_pv and is_velo:
             counter_velo_tracks += sum([
-                1
-                for v_track in VeloTracks.values()
-                if mcp_key in v_track['MCPs']
-                ])
+                1 for v_track in VeloTracks.values()
+                if mcp_key in v_track['MCPs']])
 
     return counter_velo_tracks
 
