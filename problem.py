@@ -32,27 +32,31 @@ def is_matched(rec_pv_x=0., rec_pv_y=0., rec_pv_z=0., mc_pv_x=0.,
     return z_dist_matched(rec_pv_z, mc_pv_z, m_distance)
 
 
-#get the number of Velo tracks of the PV with key pv_key
+# get the number of Velo tracks of the PV with key pv_key
 def get_number_velo_tracks(pv_key, jdata):
-  MCParticles = jdata['MCParticles']
-  VeloTracks  = jdata['VeloTracks']
-  counter_velo_tracks = 0
-  for mcp_key in MCParticles:
-    if int(pv_key) == int(MCParticles[mcp_key]['PV']) and bool(MCParticles[mcp_key]['ispv']):
-      if bool(MCParticles[mcp_key]['isvelo']):
-        for track_key in VeloTracks:
-          if mcp_key in VeloTracks[track_key]['MCPs']:
-            counter_velo_tracks = counter_velo_tracks + 1
-            break
-  return counter_velo_tracks
+    pv_key = int(pv_key)
+    MCParticles = jdata['MCParticles']
+    VeloTracks = jdata['VeloTracks']
+    counter_velo_tracks = 0
+    for mcp_key, mcp in MCParticles.items():
+        is_pv = bool(mcp['ispv'])
+        is_velo = bool(mcp['isvelo'])
+        if pv_key == int(mcp['PV']) and is_pv and is_velo:
+            counter_velo_tracks += sum([
+                1
+                for v_track in VeloTracks.values()
+                if mcp_key in v_track['MCPs']
+                ])
+
+    return counter_velo_tracks
 
 # class to do checking and plots
 
 
 class PVChecker:
     def __init__(self):
-        # print("PVChecker: checking efficiency")
-        # configuration for matching
+                # print("PVChecker: checking efficiency")
+                # configuration for matching
         self.m_mintracks = 2
         self.m_distance = 0.3
 
@@ -109,7 +113,8 @@ class PVChecker:
     def check_event_df(self):
         # loop over MC PVs and find rec PV with minimum z distance
         for mc_index, mc_pv in self.df_mc_pvs.iterrows():
-            if mc_pv['nVeloTracks'] < self.m_mintracks: continue
+            if mc_pv['nVeloTracks'] < self.m_mintracks:
+                continue
 
             # loop over rec PVs
             true_z = mc_pv['z']
@@ -204,9 +209,6 @@ class PVChecker:
             self.sigma_x / self.sigma_y / self.sigma_z / 100000.
 
         # print("the final score is", self.fin_score, "!")
-
-
-
 
 
 class PVScore_total(BaseScoreType):
@@ -418,9 +420,9 @@ def _read_data(path, type):
         jdata = json.load(open(file_path))
         MCVertices = jdata['MCVertices']
 
-
         mc_pvs = [
-            MCVertex(h['Pos'][0], h['Pos'][1], h['Pos'][2], get_number_velo_tracks(key, jdata))
+            MCVertex(h['Pos'][0], h['Pos'][1], h['Pos'][2],
+                     get_number_velo_tracks(key, jdata))
             for key, h in MCVertices.items()
         ]
         list_y = list_y + [mc_pvs]
