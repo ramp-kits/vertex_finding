@@ -281,7 +281,7 @@ class PVPredictions(BasePrediction):
         # return True
 
 
-problem_title = 'RAPID challenge'
+problem_title = 'LHCb vertex finding'
 # A type (class) which will be used to create wrapper objects for y_pred
 
 Predictions = PVPredictions
