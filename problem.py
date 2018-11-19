@@ -206,7 +206,6 @@ class PVChecker:
         # print("the final score is", self.fin_score, "!")
 
 
-checker = PVChecker()
 
 
 class PVScore_final(BaseScoreType):
@@ -220,15 +219,12 @@ class PVScore_final(BaseScoreType):
 
     def __call__(self, y_true_label_index, y_pred_label_index):
         # we can us the python PVChecker -> need to transform data for it
-
-        # checker = PVChecker
-
-
+            checker = PVChecker()
             checker.load_from_ramp(y_true_label_index, y_pred_label_index)
             checker.calculate_eff()
             checker.calculate_resolution()
-            checker.final_score()
             checker.effective_efficiency()
+            checker.final_score()
             return checker.fin_score
 
 
@@ -239,43 +235,117 @@ class PVScore_final(BaseScoreType):
             raise ValueError(msg.format(len(y_true), len(y_pred)))
 
 
-
-class PVScore_total(BaseScoreType):
+class PVScore_eff(BaseScoreType):
     is_lower_the_better = False
     minimum = 0.0
     maximum = 1.0
 
-    def __init__(self, mode, name='total score', precision=2):
+    def __init__(self, name, precision=2):
         self.name = name
         self.precision = precision
-        self.mode = mode
 
     def __call__(self, y_true_label_index, y_pred_label_index):
         # we can us the python PVChecker -> need to transform data for it
-
-        # checker = PVChecker
-
-        if self.mode == "total":
+            checker = PVChecker()
             checker.load_from_ramp(y_true_label_index, y_pred_label_index)
             checker.calculate_eff()
             checker.calculate_resolution()
-            checker.final_score()
             checker.effective_efficiency()
-            return checker.fin_score
-        if self.mode == "eff":
+            checker.final_score()
             return checker.reconstructible_efficiency
-        if self.mode == "fake":
-            return checker.total_fake_rate
-        if self.mode == "effective_eff":
-            return checker.effective_eff
-        if self.mode == "resolution":
-            return checker.sigma_z
+
 
     def check_y_pred_dimensions(self, y_true, y_pred):
         if len(y_true) != len(y_pred):
             msg = ('Wrong y_pred dimensions: y_pred should have {} '
                    'instances, instead it has {} instances')
             raise ValueError(msg.format(len(y_true), len(y_pred)))
+
+
+class PVScore_fake(BaseScoreType):
+    is_lower_the_better = False
+    minimum = 0.0
+    maximum = 1.0
+
+    def __init__(self, name, precision=2):
+        self.name = name
+        self.precision = precision
+
+    def __call__(self, y_true_label_index, y_pred_label_index):
+        # we can us the python PVChecker -> need to transform data for it
+            checker = PVChecker()
+            checker.load_from_ramp(y_true_label_index, y_pred_label_index)
+            checker.calculate_eff()
+            checker.calculate_resolution()
+            checker.effective_efficiency()
+            checker.final_score()
+            return checker.total_fake_rate
+
+
+    def check_y_pred_dimensions(self, y_true, y_pred):
+        if len(y_true) != len(y_pred):
+            msg = ('Wrong y_pred dimensions: y_pred should have {} '
+                   'instances, instead it has {} instances')
+            raise ValueError(msg.format(len(y_true), len(y_pred)))
+
+
+class PVScore_resz(BaseScoreType):
+    is_lower_the_better = False
+    minimum = 0.0
+    maximum = 1.0
+
+    def __init__(self, name, precision=2):
+        self.name = name
+        self.precision = precision
+
+    def __call__(self, y_true_label_index, y_pred_label_index):
+        # we can us the python PVChecker -> need to transform data for it
+            checker = PVChecker()
+            checker.load_from_ramp(y_true_label_index, y_pred_label_index)
+            checker.calculate_eff()
+            checker.calculate_resolution()
+            checker.effective_efficiency()
+            checker.final_score()
+            return checker.sigma_z
+
+
+    def check_y_pred_dimensions(self, y_true, y_pred):
+        if len(y_true) != len(y_pred):
+            msg = ('Wrong y_pred dimensions: y_pred should have {} '
+                   'instances, instead it has {} instances')
+            raise ValueError(msg.format(len(y_true), len(y_pred)))
+
+
+class PVScore_effective_eff(BaseScoreType):
+    is_lower_the_better = False
+    minimum = 0.0
+    maximum = 1.0
+
+    def __init__(self, name, precision=2):
+        self.name = name
+        self.precision = precision
+
+    def __call__(self, y_true_label_index, y_pred_label_index):
+        # we can us the python PVChecker -> need to transform data for it
+            checker = PVChecker()
+            checker.load_from_ramp(y_true_label_index, y_pred_label_index)
+            checker.calculate_eff()
+            checker.calculate_resolution()
+            checker.effective_efficiency()
+            checker.final_score()
+            return checker.effective_eff
+
+
+    def check_y_pred_dimensions(self, y_true, y_pred):
+        if len(y_true) != len(y_pred):
+            msg = ('Wrong y_pred dimensions: y_pred should have {} '
+                   'instances, instead it has {} instances')
+            raise ValueError(msg.format(len(y_true), len(y_pred)))
+
+
+
+
+
 
 
 class PVPredictions(BasePrediction):
@@ -312,6 +382,9 @@ class PVPredictions(BasePrediction):
         # return True
 
 
+
+
+
 problem_title = 'LHCb vertex finding'
 # A type (class) which will be used to create wrapper objects for y_pred
 
@@ -327,10 +400,10 @@ workflow = rw.workflows.ObjectDetector()
 
 score_types = [
     PVScore_final(name="final"),
-    PVScore_total(name="efficiency", mode="eff"),
-    PVScore_total(name="fake rate", mode="fake"),
-    PVScore_total(name="z resolution", mode="resolution"),
-    PVScore_total(name="effective efficiency", mode="effective_eff")
+    PVScore_eff(name="efficiency"),
+    PVScore_fake(name="fake rate"),
+    PVScore_resz(name="z resolution"),
+    PVScore_effective_eff(name="effective efficiency")
 ]
 
 
