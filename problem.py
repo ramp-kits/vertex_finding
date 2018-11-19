@@ -201,7 +201,7 @@ class PVChecker:
         # means of residuals?
         self.fin_score = self.reconstructible_efficiency * \
             (1. - 2. * self.total_fake_rate) ** 2 / \
-            self.sigma_x / self.sigma_y / self.sigma_z
+            self.sigma_x / self.sigma_y / self.sigma_z / 100000.
 
         # print("the final score is", self.fin_score, "!")
 
