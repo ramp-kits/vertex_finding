@@ -92,7 +92,7 @@ class PVChecker:
             # set-up MC PVs
             for MC_PV in y_true_label_index[i_event]:
                 MCPV_arr = np.array(
-                    [MC_PV.x, MC_PV.y, MC_PV.z, MC_PV.numberTracks])
+                    [MC_PV[0], MC_PV[1], MC_PV[2], MC_PV[3]])
                 MCPV_arr_tot = MCPV_arr_tot + [MCPV_arr]
             # set-up reconstructed PVs
             for Rec_PV in y_pred_label_index[i_event]:
@@ -313,19 +313,7 @@ def get_cv(X, y):
         (np.r_[0:n_tot], np.r_[0:n_tot])]
 
 
-class MCVertex:
-    def __init__(self, x, y, z, numberTracks):
-        self.x = x
-        self.y = y
-        self.z = z
-        self.numberTracks = numberTracks
 
-    def __repr__(self):
-            # return '{0}, {1}, {2}'.format(self.x, self.y, self.z)
-        return 'MCVertex'
-
-    def __str__(self):
-        return 'MCVertex'
 
 
 # helper calss to hold Velo state + covariance matrix
@@ -419,7 +407,7 @@ def _read_data(path, type):
         MCVertices = jdata['MCVertices']
 
         mc_pvs = [
-            MCVertex(h['Pos'][0], h['Pos'][1], h['Pos'][2],
+            (h['Pos'][0], h['Pos'][1], h['Pos'][2],
                      get_number_velo_tracks(key, jdata))
             for key, h in MCVertices.items()
         ]
