@@ -1,6 +1,6 @@
 include_directories(include)
 include_directories(../cuda/velo/common/include)
-include_directories(../cuda/patPV/include)
+include_directories(../cuda/patPV/include ${Boost_INCLUDE_DIRS})
 
 add_library(x86PatPV SHARED
   ${CMAKE_CURRENT_SOURCE_DIR}/src/PVSeedTool.cpp
