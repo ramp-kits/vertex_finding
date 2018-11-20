@@ -25,10 +25,16 @@ set(Boost_USE_STATIC_RUNTIME OFF)
 
 find_package(Boost)
 add_subdirectory(baseline)
+add_subdirectory(marian)
 add_subdirectory(PatPV)
+add_subdirectory(PatPVmarian)
 include_directories(PatPV/include ${Boost_INCLUDE_DIRS})
 include_directories(baseline/baseline)
 file(GLOB ramp_sources "${CMAKE_CURRENT_SOURCE_DIR}/baseline/baseline.cpp")
 add_executable(ramp_test ${ramp_sources} )
 target_link_libraries(ramp_test  PUBLIC RAMP x86PatPV  ${ROOT_LIBRARIES} ${Boost_LIBRARIES})
+
+file(GLOB dummy_sources "${CMAKE_CURRENT_SOURCE_DIR}/marian/baseline.cpp")
+add_executable(dummy_test ${dummy_sources} )
+target_link_libraries(dummy_test  PUBLIC marianRAMP marianPatPV  ${ROOT_LIBRARIES} ${Boost_LIBRARIES})
 
