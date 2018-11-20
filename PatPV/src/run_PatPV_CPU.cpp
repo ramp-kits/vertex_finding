@@ -1,12 +1,12 @@
 #include "run_PatPV_CPU.h"
 #include "PVSeedTool.h"
 #include <cmath>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
 
-namespace pt = boost::property_tree;
 //configuration
 
+//separation to accept reconstructed PV 
+double m_pvsChi2Separation = 25.;
+double m_pvsChi2SeparationLowMult = 91;
 XYZPoint beamspot = {0.,0.,0.};
 
 
@@ -14,13 +14,6 @@ uint32_t reconstructMultiPVFromTracks(VeloState tracks2use[], VertexBase outvtxv
                                   bool tracks2disable[], XYZPoint seeds[],
                                   uint32_t number_of_tracks) 
 {
-
-  pt::ptree configtree;
-  pt::read_json("config.json",configtree);
-
-  //separation to accept reconstructed PV
-  const auto  m_pvsChi2Separation = configtree.get("pvsChi2Separation",25.);
-  const auto  m_pvsChi2SeparationLowMult = configtree.get("pvsChi2SeparationLowMult",91);
 
 
   VeloState * rtracks = tracks2use; 

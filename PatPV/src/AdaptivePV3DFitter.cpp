@@ -1,20 +1,24 @@
 #include <vector>
 #include <cmath>
 #include <iostream>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
 
 #include "AdaptivePV3DFitter.h"
 
 
 //configuration
-double m_trackMaxChi2 = 12;
-double m_TrackErrorScaleFactor = 1.;
-double m_trackChi = 12.;
-double m_maxDeltaZCache= 1.;
-int m_minIter = 5;
+size_t m_minTr = 4;
+int    m_Iterations = 20;
+int    m_minIter = 5;
+double m_maxDeltaZ = 0.0005; // unit:: mm
+double m_minTrackWeight = 0.00000001;
+double m_TrackErrorScaleFactor = 1.0;
+double m_maxChi2 = 400.0;
+double m_trackMaxChi2 = 12.;
+double m_trackChi = std::sqrt(m_trackMaxChi2);     // sqrt of trackMaxChi2
+double m_trackMaxChi2Remove = 25.;
+double m_maxDeltaZCache = 1.; //unit: mm
 
-namespace pt = boost::property_tree;
+
 
 //=============================================================================
 // Least square adaptive fitting method
@@ -23,21 +27,8 @@ bool fitVertex( XYZPoint& seedPoint, VeloState host_velo_states[], Vertex& vtx,
                 uint32_t number_of_tracks, bool tracks2disable[], bool tracks2remove[]) 
 {
 
-  pt::ptree configtree;
-  pt::read_json("config.json",configtree);
 
-  const auto m_minTr = configtree.get("minTr",4);
-  const auto m_Iterations = configtree.get("Iterations", 20);
-  const auto m_maxDeltaZ = configtree.get("maxDeltaZ", 0.0005); // unit:: mm
-  const auto minTrackWeight = configtree.get("minTrackWeight",0.00000001);
-  const auto m_maxChi2 = configtree.get("maxChi2", 400.0);
-  const auto m_trackMaxChi2Remove = configtree.get("trackMaxChi2Remove", 25.);
 
-  m_minIter = configtree.get("minIter", 5);
-  m_trackMaxChi2 = configtree.get("trackMaxChi2", 12.);
-  m_TrackErrorScaleFactor = configtree.get("TrackErrorScaleFactor", 1.0);
-  m_trackChi = configtree.get("trackChi", std::sqrt(configtree.get("trackMaxChi2", 12.)));     // sqrt of trackMaxChi2
-  m_maxDeltaZCache= configtree.get("maxDeltaZCache", 1.); //unit: mm
 
   double tr_state_x[number_of_tracks] ;
   double tr_state_y[number_of_tracks] ;
@@ -205,7 +196,7 @@ bool fitVertex( XYZPoint& seedPoint, VeloState host_velo_states[], Vertex& vtx,
       double weight = getTukeyWeight(tr_chi2, nbIter) ;
 
       // add the track
-      if ( weight > minTrackWeight ) {
+      if ( weight > m_minTrackWeight ) {
         ++ntrin;
         halfD2Chi2DX2_00 += weight * tr_halfD2Chi2DX2_00 ;
         halfD2Chi2DX2_10 += weight * tr_halfD2Chi2DX2_10 ;
@@ -343,7 +334,7 @@ bool fitVertex( XYZPoint& seedPoint, VeloState host_velo_states[], Vertex& vtx,
 
     double tr_chi2          = res.x*res.x / m_state_c00 + res.y*res.y / m_state_c11;
 
-    if( tr_chi2 > minTrackWeight ) {
+    if( tr_chi2 > m_minTrackWeight) {
       VeloState state = host_velo_states[index];
       vtx.addToTracks( state, tr_chi2 ) ;
     }

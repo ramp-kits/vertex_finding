@@ -6,13 +6,9 @@
 #include <algorithm>
 #include <iostream>
 
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
-
 // local
 #include "PVSeedTool.h"
 
-namespace pt = boost::property_tree;
 
 bool  vtxcomp( vtxCluster *first, vtxCluster *second ) {
     return first->z < second->z;
@@ -50,6 +46,10 @@ double X0 = m_x0MS;
 double m_scatCons = (13.6*sqrt(X0)*(1.+0.038*log(X0)));
 
 
+
+
+
+
 //=============================================================================
 // getSeeds
 //=============================================================================
@@ -57,21 +57,7 @@ uint32_t getSeeds( VeloState inputTracks[], const XYZPoint& beamspot,
                    XYZPoint seeds[], bool tracks2disable[],
                    uint32_t number_of_tracks)  {
   
-  pt::ptree configtree;
-  pt::read_json("config.json",configtree);
-
-  m_maxChi2Merge = configtree.get<double>("maxChi2Merge",25.);
-  m_factorToIncreaseErrors = configtree.get<double>("factorToIncreaseErrors",15.);
-  m_minClusterMult = configtree.get<int>("minClusterMult",4);
-  m_minCloseTracksInCluster = configtree.get<int>("minCloseTracksInCluster",3);
-  m_dzCloseTracksInCluster = configtree.get<double>("dzCloseTracksInCluster",5.); // unit: mm
-  m_highMult = configtree.get<int>("highMult",10);
-  m_ratioSig2HighMult = configtree.get<double>("ratioSig2HighMult",1.);
-  m_ratioSig2LowMult = configtree.get<double>("ratioSig2LowMult",.9);
-  m_max_clusters = configtree.get<int>("max_clusters",200); // maximmum number of clusters
-  m_x0MS = configtree.get<double>("x0MS",0.01);
-  X0 = m_x0MS;
-  m_scatCons = (13.6*sqrt(X0)*(1.+0.038*log(X0)));
+  
   
 
   vtxCluster  vclusters[1200];
