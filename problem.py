@@ -195,7 +195,7 @@ class PVChecker:
     def effective_efficiency(self):
         self.effective_eff = (
             self.reconstructible_efficiency * (
-                1. - 2. * self.total_fake_rate) ** 2
+                1. -  self.total_fake_rate) ** 2
         )
     # function to get determine total score
 
@@ -203,7 +203,7 @@ class PVChecker:
         # critertia: efficiency, fake rate, sigma of residuals,
         # means of residuals?
         self.fin_score = self.reconstructible_efficiency * \
-            (1. - 2. * self.total_fake_rate) ** 2 / \
+            (1. -  self.total_fake_rate) ** 2 / \
             self.sigma_x / self.sigma_y / self.sigma_z / 100000.
 
         # print("the final score is", self.fin_score, "!")
@@ -214,7 +214,7 @@ class PVScore_total(BaseScoreType):
     minimum = 0.0
     maximum = 1.0
 
-    def __init__(self, mode, name='total score', precision=2):
+    def __init__(self, mode, name='total score', precision=3):
         self.name = name
         self.precision = precision
         self.mode = mode
