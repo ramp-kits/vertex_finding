@@ -52,9 +52,13 @@ def get_number_velo_tracks(pv_key, jdata):
 
 
 class PVChecker:
+
+    
+
     def __init__(self):
                 # print("PVChecker: checking efficiency")
                 # configuration for matching
+
         self.m_mintracks = 2
         self.m_distance = 0.3
 
@@ -66,6 +70,10 @@ class PVChecker:
         self.res_x = np.empty(0)
         self.res_y = np.empty(0)
         self.res_z = np.empty(0)
+
+
+    
+    
 
     # load data
     # here we expect arr_rec_pvs to be numpy array of array[x,y,z] and
@@ -222,7 +230,15 @@ class PVScore_total(BaseScoreType):
     def __call__(self, y_true_label_index, y_pred_label_index):
         # we can us the python PVChecker -> need to transform data for it
         checker = PVChecker()
-        checker.load_from_ramp(y_true_label_index, y_pred_label_index)
+       # checker.load_from_ramp(y_true_label_index, y_pred_label_index)
+        pred_file = open('pred.pkl', 'r')
+        truth_file = open('true.pkl', 'r')
+        predarr = np.load(pred_file)
+        trutharr = np.load(truth_file)
+        checker.load_from_ramp(trutharr, predarr)
+        pred_file.close()
+        truth_file.close()
+        
         checker.calculate_eff()
         checker.calculate_resolution()
         checker.final_score()
@@ -249,10 +265,19 @@ class PVPredictions(BasePrediction):
     def __init__(self, y_pred=None, y_true=None, n_samples=None):
         if y_pred is not None:
             self.y_pred = y_pred
+            outfile = open('pred.pkl','w')
+            np.save(outfile, y_pred)
+            outfile.close()
+            print ('prediction type is ', type(y_pred))
         elif y_true is not None:
             self.y_pred = y_true
+            outfile = open('true.pkl','w')
+            np.save(outfile, y_true)
+            outfile.close()
+            print ('truth type is ', type(y_true))
         elif n_samples is not None:
             self.y_pred = np.empty(n_samples, dtype=object)
+            print('n_samples')
         else:
             raise ValueError(
                 'Missing init argument: y_pred, y_true, or n_samples')
@@ -263,6 +288,7 @@ class PVPredictions(BasePrediction):
     @classmethod
     # combination at the moment dummy implementation
     def combine(cls, predictions_list, index_list=None):
+        print('len pred lsit', len(predictions_list))
         # if index_list is None:  # we combine the full list
         #     index_list = range(len(predictions_list))
         # y_comb_list = [predictions_list[i].y_pred for i in index_list]
@@ -317,7 +343,7 @@ def get_cv(X, y):
 
 
 # helper calss to hold Velo state + covariance matrix
-class VeloState:
+class VeloState(object):
     def __init__(self, x, y, z, tx, ty, pq,
                  cov_x, cov_y, cov_tx, cov_ty, cov_xtx):
         self.x = x
@@ -343,7 +369,7 @@ class VeloState:
 # helper class to hold Velo hits
 
 
-class VeloHit:
+class VeloHit(object):
     def __init__(self, x, y, z):
         self.x = x
         self.y = y
@@ -357,7 +383,7 @@ class VeloHit:
 
 
 # class to hold tracks and hits of an event
-class EventData:
+class EventData(object):
     def __init__(self, list_tracks, list_hits):
         self.tracks = list_tracks
         self.hits = list_hits
@@ -443,13 +469,14 @@ def _read_data(path, type):
     x_array[:] = list_x
     x_array = np.array(x_array)
 
+
     return x_array, y_array
 
 
 def get_test_data(path):
-    return _read_data(path, 'test')
+    return _read_data(path, 'private/set0_')
     # return np.array([1]),np.array([2])
 
 
 def get_train_data(path):
-    return _read_data(path, 'train')
+    return _read_data(path, 'private/set1_')
