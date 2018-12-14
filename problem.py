@@ -395,7 +395,7 @@ def _read_data(path, type):
     # have to set it for reading
     test = os.getenv('RAMP_TEST_MODE', 0)
     path = path + '/data/{0}/'.format(type)
-    list_of_files = os.listdir(path)
+    list_of_files = sorted(os.listdir(path))
     # for testing, run over subset of files
     if test:
         list_of_files = list_of_files[:100]
